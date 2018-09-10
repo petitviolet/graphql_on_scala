@@ -1,4 +1,4 @@
-package net.petitviolet.graphql.models.projects
+package net.petitviolet.graphql.models
 
 import java.time.ZonedDateTime
 

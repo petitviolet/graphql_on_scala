@@ -1,9 +1,6 @@
-package net.petitviolet.graphql.models.tasks
+package net.petitviolet.graphql.models
 
 import java.time.ZonedDateTime
-
-import net.petitviolet.graphql.models.projects.ProjectId
-import net.petitviolet.graphql.models.users.User
 
 case class Task(id: TaskId, projectId: ProjectId,
   assignedTo: User,
