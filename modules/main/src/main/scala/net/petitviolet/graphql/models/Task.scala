@@ -3,8 +3,8 @@ package net.petitviolet.graphql.models
 import java.time.ZonedDateTime
 
 case class Task(id: TaskId, projectId: ProjectId,
-  assignedTo: User,
-  createdBy: User,
+  assignedTo: UserId,
+  createdBy: UserId,
   name: TaskName, description: TaskDescription, status: TaskStatus, createdAt: ZonedDateTime)
 
 case class TaskId(value: String)
