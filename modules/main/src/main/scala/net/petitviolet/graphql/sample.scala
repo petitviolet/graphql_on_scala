@@ -18,4 +18,3 @@ private object GraphQLServer extends GraphQLServerBase {
   override protected def context = new SchemaSample.GraphQLContext()
 
 }
-
