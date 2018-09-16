@@ -1,3 +1,5 @@
 package net.petitviolet.graphql.schemas
 
-class GraphQLContext {}
+import scala.concurrent.ExecutionContext
+
+class GraphQLContext(val ec: ExecutionContext) {}

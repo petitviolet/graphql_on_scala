@@ -5,6 +5,7 @@ import java.time.format.DateTimeFormatter
 
 import net.petitviolet.graphql.models._
 import net.petitviolet.graphql.schemas.Ctx
+import net.petitviolet.graphql.schemas.resolvers.UserResolver
 import sangria.macros.derive
 import sangria.schema._
 
@@ -87,7 +88,7 @@ object ObjectTypes {
         Field("name", StringType, resolve = { _.value.name.value }),
         Field("plan", projectPlanType, resolve = { _.value.plan }),
         Field("users", ListType(userType), resolve = { ctx =>
-          ???
+          UserResolver.byProjectId(ctx.value.id)(ctx.ctx)
         }),
         Field("tasks", ListType(taskType), resolve = { ctx =>
           ???
@@ -108,10 +109,10 @@ object ObjectTypes {
           ???
         }),
         Field("createdUser", userType, resolve = { ctx =>
-          ???
+          UserResolver.byId(ctx.value.createdBy)(ctx.ctx)
         }),
         Field("assignedUser", userType, resolve = { ctx =>
-          ???
+          UserResolver.byId(ctx.value.assignedTo)(ctx.ctx)
         })
     )
   )
