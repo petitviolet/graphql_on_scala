@@ -11,6 +11,7 @@ import akka.http.scaladsl.model.StatusCodes._
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server._
 import akka.stream.ActorMaterializer
+import net.petitviolet.graphql.schemas.GraphQLContext
 import sangria.ast.Document
 import sangria.execution.{ ErrorWithResolver, QueryAnalysisError, _ }
 import sangria.marshalling.sprayJson._
@@ -22,14 +23,17 @@ import scala.concurrent._
 import scala.concurrent.duration._
 import scala.io.StdIn
 
-trait GraphQLServerBase {
-  type Ctx
-  protected def schema: Schema[Ctx, Unit]
-  protected def context: Ctx
+object GraphQLServer {
+  type Ctx = GraphQLContext
+
+  private lazy val schema: Schema[Ctx, Unit] = schemas.schema
 
   def showSchema: String = {
     schema.renderPretty
   }
+
+  private val executionContext =
+    ExecutionContext.fromExecutorService(Executors.newFixedThreadPool(16))
 
   def execute(jsValue: JsValue)(implicit ec: ExecutionContext): Future[(StatusCode, JsValue)] = {
     val JsObject(fields) = jsValue
@@ -43,6 +47,8 @@ trait GraphQLServerBase {
     }
 
     val Some(JsString(document)) = fields.get("query")
+
+    val context = new GraphQLContext(executionContext)
 
     Future.fromTry(QueryParser.parse(document)) flatMap { queryDocument: Document =>
       Executor
@@ -65,8 +71,9 @@ trait GraphQLServerBase {
   }
 }
 
-class SampleApp(server: GraphQLServerBase) {
+abstract class GraphQLApplication {
   def main(args: Array[String]): Unit = {
+    val server = GraphQLServer
 
     implicit val system: ActorSystem = ActorSystem("graphql-prac")
     implicit val materializer: ActorMaterializer = ActorMaterializer()
@@ -74,7 +81,7 @@ class SampleApp(server: GraphQLServerBase) {
     implicit val executionContext =
       ExecutionContext.fromExecutor(Executors.newFixedThreadPool(sys.runtime.availableProcessors()))
 
-    val route: Route =
+    val route: Route = logRequest("[Request]") {
       (post & path("graphql")) {
         entity(as[JsValue]) { jsValue =>
           complete(server.execute(jsValue))
@@ -88,9 +95,10 @@ class SampleApp(server: GraphQLServerBase) {
             getFromResource("graphiql.html")
           }
         }
+    }
 
     val host = sys.props.get("http.host") getOrElse "0.0.0.0"
-    val port = sys.props.get("http.port").fold(8080)(_.toInt)
+    val port = sys.props.get("http.port").fold(9999)(_.toInt)
 
     val f = Http().bindAndHandle(route, host, port)
 
