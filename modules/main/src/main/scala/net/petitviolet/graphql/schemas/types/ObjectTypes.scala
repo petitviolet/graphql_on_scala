@@ -13,15 +13,15 @@ import scala.util.Try
 object ObjectTypes {
   implicit val dateTimeType: ScalarType[ZonedDateTime] = {
     import sangria.validation._
+    case object ZonedDateTimeCoercionViolation
+        extends ValueCoercionViolation("ZonedDateTime expected")
+
     val format = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
 
     val convertString: String => Either[Violation, ZonedDateTime] = str =>
       Try { ZonedDateTime.parse(str, format) }.toEither.left.flatMap { _ =>
         Left(ZonedDateTimeCoercionViolation)
     }
-
-    case object ZonedDateTimeCoercionViolation
-        extends ValueCoercionViolation("ZonedDateTime expected")
 
     ScalarType[ZonedDateTime](
       "ZonedDateTime",
