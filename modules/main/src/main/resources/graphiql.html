@@ -22,6 +22,18 @@
         #graphiql {
             height: 100vh;
         }
+        .user-id {
+            background: linear-gradient(#f7f7f7, #e2e2e2);
+            border-bottom: 1px solid #d0d0d0;
+            padding: 7px 14px 6px;
+            font-size: 24px;
+        }
+        .user-id > input {
+            padding-left: 3px;
+            font-size: 20px;
+            width: 50%;
+        }
+
     </style>
 
     <!--
@@ -47,6 +59,7 @@
 
 </head>
 <body>
+<div class="user-id">UserId <input id="user-id" placeholder="UserId"></div>
 <div id="graphiql">Loading...</div>
 <script>
 
@@ -119,6 +132,7 @@
             headers: {
                 'Accept': 'application/json',
                 'Content-Type': 'application/json',
+                'X-User-Id': document.getElementById('user-id').value,
             },
             body: JSON.stringify(graphQLParams),
             credentials: 'include',
