@@ -5,9 +5,11 @@ import net.petitviolet.graphql.models._
 import scala.concurrent.{ ExecutionContext, Future }
 
 object UserDao extends Dao[UserId, User] {
+  def authenticate(userId: String)(implicit ec: ExecutionContext): Future[Option[User]] = {
+    findBy { case (_, user) => user.id.value == userId }
+  }
+
   def findByProjectId(projectId: ProjectId)(implicit ec: ExecutionContext): Future[Seq[User]] = {
-    Future {
-      data.collect({ case (_, user) if user.projectId == projectId => user }).toList
-    }
+    filterBy { case (_, user) => user.projectId == projectId }
   }
 }

@@ -7,8 +7,12 @@ import net.petitviolet.graphql.schemas.GraphQLContext
 import scala.concurrent.Future
 
 object UserResolver {
+  def all()(implicit ctx: GraphQLContext): Future[Seq[User]] = {
+    UserDao.findAll()
+  }
+
   def byId(userId: UserId)(implicit ctx: GraphQLContext): Future[User] = {
-    UserDao.findById(userId).forceGet
+    UserDao.findById(userId).forceGetOr(s"user(${userId.value}) not found.")
   }
 
   def byProjectId(projectId: ProjectId)(implicit ctx: GraphQLContext): Future[Seq[User]] = {
