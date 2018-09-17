@@ -5,7 +5,7 @@ import java.time.format.DateTimeFormatter
 
 import net.petitviolet.graphql.models._
 import net.petitviolet.graphql.schemas.Ctx
-import net.petitviolet.graphql.schemas.resolvers.UserResolver
+import net.petitviolet.graphql.schemas.resolvers.{ ProjectResolver, TaskResolver, UserResolver }
 import sangria.macros.derive
 import sangria.schema._
 
@@ -59,10 +59,13 @@ object ObjectTypes {
         Field("name", StringType, resolve = { _.value.name.value }),
         Field("projectId", StringType, resolve = { _.value.projectId.value }),
         Field("assignedTasks", ListType(taskType), resolve = { ctx =>
-          ???
+          TaskResolver.byAssignedTo(ctx.value.id)(ctx.ctx)
+        }),
+        Field("createdTasks", ListType(taskType), resolve = { ctx =>
+          TaskResolver.byCreatedBy(ctx.value.id)(ctx.ctx)
         }),
         Field("project", projectType, resolve = { ctx =>
-          ???
+          ProjectResolver.byId(ctx.value.projectId)(ctx.ctx)
         })
     )
   )
@@ -91,7 +94,7 @@ object ObjectTypes {
           UserResolver.byProjectId(ctx.value.id)(ctx.ctx)
         }),
         Field("tasks", ListType(taskType), resolve = { ctx =>
-          ???
+          TaskResolver.byProjectId(ctx.value.id)(ctx.ctx)
         })
     )
   )
@@ -106,7 +109,7 @@ object ObjectTypes {
         Field("status", taskStatusType, resolve = { _.value.status }),
         Field("projectId", StringType, resolve = { _.value.projectId.value }),
         Field("project", projectType, resolve = { ctx =>
-          ???
+          ProjectResolver.byId(ctx.value.projectId)(ctx.ctx)
         }),
         Field("createdUser", userType, resolve = { ctx =>
           UserResolver.byId(ctx.value.createdBy)(ctx.ctx)

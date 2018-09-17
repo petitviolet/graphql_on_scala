@@ -18,5 +18,4 @@ object ProjectDao extends Dao[ProjectId, Project] {
       p.id -> p
     }
   }
-
 }
