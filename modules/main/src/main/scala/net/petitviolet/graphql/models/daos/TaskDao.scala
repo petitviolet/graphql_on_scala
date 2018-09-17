@@ -1,10 +1,68 @@
 package net.petitviolet.graphql.models.daos
 
+import java.time.ZonedDateTime
+
 import net.petitviolet.graphql.models._
 
 import scala.concurrent.{ ExecutionContext, Future }
 
 object TaskDao extends Dao[TaskId, Task] {
+  private[daos] def init(): Unit = {
+    this.data ++= List(
+      Task(
+        TaskId("t1"),
+        ProjectId("p1"),
+        UserId("1a"),
+        UserId("1a"),
+        TaskName("task-1"),
+        TaskDescription("task-1-description"),
+        TaskStatus.Todo,
+        ZonedDateTime.now()
+      ),
+      Task(
+        TaskId("t2"),
+        ProjectId("p1"),
+        UserId("1b"),
+        UserId("1a"),
+        TaskName("task-2"),
+        TaskDescription("task-2-description"),
+        TaskStatus.Todo,
+        ZonedDateTime.now()
+      ),
+      Task(
+        TaskId("t3"),
+        ProjectId("p1"),
+        UserId("1a"),
+        UserId("1b"),
+        TaskName("task-3"),
+        TaskDescription("task-3-description"),
+        TaskStatus.Doing,
+        ZonedDateTime.now()
+      ),
+      Task(
+        TaskId("t4"),
+        ProjectId("p2"),
+        UserId("1c"),
+        UserId("1c"),
+        TaskName("task-4"),
+        TaskDescription("task-4-description"),
+        TaskStatus.Done,
+        ZonedDateTime.now()
+      ),
+      Task(
+        TaskId("t5"),
+        ProjectId("p1"),
+        UserId("1b"),
+        UserId("1a"),
+        TaskName("task-5"),
+        TaskDescription("task-5-description"),
+        TaskStatus.Done,
+        ZonedDateTime.now()
+      ),
+    ).map { t =>
+      t.id -> t
+    }
+  }
 
   def findByProjectId(projectId: ProjectId)(implicit ec: ExecutionContext): Future[Seq[Task]] = {
     filterBy {

@@ -13,5 +13,5 @@ sealed trait Plan
 
 object Plan {
   case object Trial extends Plan
-  case class Premium(contractDate: ZonedDateTime)
+  case class Premium(contractDate: ZonedDateTime) extends Plan
 }

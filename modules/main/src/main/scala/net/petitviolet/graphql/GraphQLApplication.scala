@@ -13,6 +13,7 @@ import akka.http.scaladsl.server._
 import akka.stream.ActorMaterializer
 import net.petitviolet.graphql.commons.WithLogger
 import net.petitviolet.graphql.commons.exceptions.{ AuthenticationError, NotFoundException }
+import net.petitviolet.graphql.models.daos
 import net.petitviolet.graphql.schemas.GraphQLContext
 import sangria.ast.Document
 import sangria.execution.{ ExceptionHandler, _ }
@@ -166,6 +167,8 @@ object GraphQLServer extends WithLogger {
 abstract class GraphQLApplication {
   def main(args: Array[String]): Unit = {
     val server = GraphQLServer
+
+    daos.init()
 
     implicit val system: ActorSystem = ActorSystem("graphql-prac")
     implicit val materializer: ActorMaterializer = ActorMaterializer()
