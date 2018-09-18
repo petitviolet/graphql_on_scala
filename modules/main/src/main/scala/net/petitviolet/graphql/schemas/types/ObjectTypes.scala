@@ -12,7 +12,7 @@ import sangria.schema._
 import scala.util.Try
 
 object ObjectTypes {
-  implicit val dateTimeType: ScalarType[ZonedDateTime] = {
+  private implicit val dateTimeType: ScalarType[ZonedDateTime] = {
     import sangria.validation._
     case object ZonedDateTimeCoercionViolation
         extends ValueCoercionViolation("ZonedDateTime expected")
@@ -39,7 +39,7 @@ object ObjectTypes {
     )
   }
 
-  val entityInterface = InterfaceType[Ctx, Entity](
+  private val entityInterface = InterfaceType[Ctx, Entity](
     "Entity",
     "Entity",
     () =>
@@ -70,7 +70,7 @@ object ObjectTypes {
     )
   )
 
-  implicit lazy val projectPlanType = {
+  private implicit lazy val projectPlanType = {
     val trial = ObjectType[Ctx, Plan](
       "Trial",
       () => fields[Ctx, Plan](Field("type", StringType, resolve = _ => "Trial"))
@@ -120,5 +120,6 @@ object ObjectTypes {
     )
   )
 
-  implicit lazy val taskStatusType: EnumType[TaskStatus] = derive.deriveEnumType[TaskStatus]()
+  private implicit lazy val taskStatusType: EnumType[TaskStatus] =
+    derive.deriveEnumType[TaskStatus]()
 }
