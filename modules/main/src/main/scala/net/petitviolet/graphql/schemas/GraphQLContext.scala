@@ -1,5 +1,7 @@
 package net.petitviolet.graphql.schemas
 
+import java.time.ZonedDateTime
+
 import net.petitviolet.graphql.commons.exceptions.AuthenticationError
 import net.petitviolet.graphql.models.User
 import net.petitviolet.graphql.models.daos.UserDao
@@ -7,6 +9,7 @@ import net.petitviolet.graphql.models.daos.UserDao
 import scala.concurrent.{ ExecutionContext, Future }
 
 class GraphQLContext private (userOpt: Option[User])(implicit val ec: ExecutionContext) {
+  val dateTime: ZonedDateTime = ZonedDateTime.now()
   def viewer: User = userOpt getOrElse { throw AuthenticationError("must logged-in!") }
 }
 
