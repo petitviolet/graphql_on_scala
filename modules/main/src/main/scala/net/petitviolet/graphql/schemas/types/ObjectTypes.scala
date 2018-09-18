@@ -111,9 +111,11 @@ object ObjectTypes {
         Field("project", projectType, resolve = { ctx =>
           ProjectResolver.byId(ctx.value.projectId)(ctx.ctx)
         }),
+        Field("createdBy", StringType, resolve = { _.value.createdBy.value }),
         Field("createdUser", userType, resolve = { ctx =>
           UserResolver.byId(ctx.value.createdBy)(ctx.ctx)
         }),
+        Field("assignedTo", StringType, resolve = { _.value.assignedTo.value }),
         Field("assignedUser", userType, resolve = { ctx =>
           UserResolver.byId(ctx.value.assignedTo)(ctx.ctx)
         })

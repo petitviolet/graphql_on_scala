@@ -11,5 +11,6 @@ object Mutations {
 
   private def mutations: List[Mutation] = List(
     CreateTask,
+    UpdateTask
   )
 }

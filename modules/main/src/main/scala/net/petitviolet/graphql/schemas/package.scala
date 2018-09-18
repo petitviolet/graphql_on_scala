@@ -18,5 +18,4 @@ package object schemas {
   )
 
   lazy val schema: Schema[Ctx, Unit] = Schema(query, Some(mutation))
-//  lazy val schema: Schema[Ctx, Unit] = Schema(query, None)
 }
