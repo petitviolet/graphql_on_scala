@@ -14,9 +14,9 @@ package object schemas {
   private lazy val mutation: ObjectType[Ctx, Unit] = ObjectType(
     "Mutation",
     "Mutation",
-    fields = ???
+    fields = Mutations.field
   )
 
-  // lazy val schema: Schema[Ctx, Unit] = Schema(query, Some(mutation))
-  lazy val schema: Schema[Ctx, Unit] = Schema(query, None)
+  lazy val schema: Schema[Ctx, Unit] = Schema(query, Some(mutation))
+//  lazy val schema: Schema[Ctx, Unit] = Schema(query, None)
 }

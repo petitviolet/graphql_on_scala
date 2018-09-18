@@ -1,6 +1,7 @@
 package net.petitviolet.graphql.models
 
 import java.time.ZonedDateTime
+import java.util.UUID
 
 case class Task(id: TaskId,
                 projectId: ProjectId,
@@ -13,6 +14,11 @@ case class Task(id: TaskId,
     extends EntityWithId[TaskId]
 
 case class TaskId(value: String) extends Id
+
+object TaskId {
+  def generate: TaskId = apply(UUID.randomUUID().toString)
+}
+
 case class TaskName(value: String)
 case class TaskDescription(value: String)
 
