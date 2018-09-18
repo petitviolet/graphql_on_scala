@@ -23,4 +23,10 @@ trait Dao[E <: Entity] {
   def findByIds(ids: Seq[E#ID])(implicit ec: ExecutionContext): Future[Seq[E]] = Future {
     ids collect data
   }
+
+  def store(entity: E)(implicit ec: ExecutionContext): Future[E] = {
+    Future { data.update(entity.id, entity) } map { _ =>
+      entity
+    }
+  }
 }
