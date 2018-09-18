@@ -4,7 +4,7 @@ import java.time.{ ZoneId, ZonedDateTime }
 
 import net.petitviolet.graphql.models._
 
-object ProjectDao extends Dao[ProjectId, Project] {
+object ProjectDao extends Dao[Project] {
   private[daos] def init(): Unit = {
     this.data ++= List(
       Project(ProjectId("p1"), ProjectName("first-project"), Plan.Trial, ZonedDateTime.now()),

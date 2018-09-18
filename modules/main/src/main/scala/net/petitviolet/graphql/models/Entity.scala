@@ -6,6 +6,11 @@ trait Id {
   def value: String
 }
 trait Entity {
-  def id: Id
+  type ID <: Id
+  def id: ID
   def createdAt: ZonedDateTime
+}
+
+trait EntityWithId[id <: Id] extends Entity {
+  override type ID = id
 }

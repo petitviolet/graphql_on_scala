@@ -6,7 +6,7 @@ import net.petitviolet.graphql.models._
 
 import scala.concurrent.{ ExecutionContext, Future }
 
-object TaskDao extends Dao[TaskId, Task] {
+object TaskDao extends Dao[Task] {
   private[daos] def init(): Unit = {
     this.data ++= List(
       Task(

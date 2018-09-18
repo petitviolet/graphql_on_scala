@@ -3,7 +3,7 @@ package net.petitviolet.graphql.models
 import java.time.ZonedDateTime
 
 case class Project(id: ProjectId, name: ProjectName, plan: Plan, createdAt: ZonedDateTime)
-    extends Entity
+    extends EntityWithId[ProjectId]
 
 case class ProjectId(value: String) extends Id
 

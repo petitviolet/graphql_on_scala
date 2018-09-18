@@ -10,7 +10,7 @@ case class Task(id: TaskId,
                 description: TaskDescription,
                 status: TaskStatus,
                 createdAt: ZonedDateTime)
-    extends Entity
+    extends EntityWithId[TaskId]
 
 case class TaskId(value: String) extends Id
 case class TaskName(value: String)
