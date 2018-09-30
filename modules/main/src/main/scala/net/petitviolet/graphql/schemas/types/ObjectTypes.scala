@@ -49,6 +49,23 @@ object ObjectTypes {
     )
   )
 
+//  implicit lazy val userType = derive.deriveObjectType[Ctx, User](
+//    derive.Interfaces(entityInterface),
+//    derive.AddFields(
+//      Field("assignedTasks", ListType(taskType), resolve = { ctx =>
+//        TaskResolver.byAssignedTo(ctx.value.id)(ctx.ctx)
+//      }),
+//      Field("createdTasks", ListType(taskType), resolve = { ctx =>
+//        TaskResolver.byCreatedBy(ctx.value.id)(ctx.ctx)
+//      }),
+//      Field("project", projectType, resolve = { ctx =>
+//        ProjectResolver.byId(ctx.value.projectId)(ctx.ctx)
+//      })
+//    )
+//  )
+
+  implicit lazy val userStatusType = derive.deriveEnumType[UserStatus]()
+
   implicit lazy val userType: ObjectType[Ctx, User] = ObjectType[Ctx, User](
     "User",
     interfaces = interfaces[Ctx, User](entityInterface),
@@ -57,6 +74,7 @@ object ObjectTypes {
         Field("id", StringType, resolve = { _.value.id.value }),
         Field("createdAt", dateTimeType, resolve = { _.value.createdAt }),
         Field("name", StringType, resolve = { _.value.name.value }),
+        Field("status", userStatusType, resolve = { _.value.status }),
         Field("projectId", StringType, resolve = { _.value.projectId.value }),
         Field("assignedTasks", ListType(taskType), resolve = { ctx =>
           TaskResolver.byAssignedTo(ctx.value.id)(ctx.ctx)
