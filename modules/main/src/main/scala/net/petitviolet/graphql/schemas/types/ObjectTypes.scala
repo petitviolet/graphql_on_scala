@@ -71,14 +71,11 @@ object ObjectTypes {
   )
 
   private implicit lazy val projectPlanType = {
-    val trial = ObjectType[Ctx, Plan](
-      "Trial",
-      () => fields[Ctx, Plan](Field("type", StringType, resolve = _ => "Trial"))
-    )
-    val premium = derive.deriveObjectType[Ctx, Plan.Premium](
-      )
+    val free = derive.deriveObjectType[Ctx, Plan.Free]()
+    val standard = derive.deriveObjectType[Ctx, Plan.Standard]()
+    val enterprise = derive.deriveObjectType[Ctx, Plan.Enterprise]()
 
-    UnionType("Plan", types = trial :: premium :: Nil)
+    UnionType("Plan", types = free :: standard :: enterprise :: Nil)
   }
 
   implicit lazy val projectType: ObjectType[Ctx, Project] = ObjectType[Ctx, Project](

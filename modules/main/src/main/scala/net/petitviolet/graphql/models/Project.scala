@@ -12,6 +12,7 @@ case class ProjectName(value: String)
 sealed trait Plan
 
 object Plan {
-  case object Trial extends Plan
-  case class Premium(contractDate: ZonedDateTime) extends Plan
+  case class Free(startDate: ZonedDateTime) extends Plan
+  case class Standard(contractDate: ZonedDateTime)
+  case class Enterprise(userLimit: Int, contractDate: ZonedDateTime) extends Plan
 }
