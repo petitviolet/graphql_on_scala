@@ -44,7 +44,7 @@ object ObjectTypes {
     "Entity",
     () =>
       fields[Ctx, Entity](
-        Field("id", StringType, resolve = { _.value.id.value }),
+        Field("id", IDType, resolve = { _.value.id.value }),
         Field("createdAt", dateTimeType, resolve = { _.value.createdAt }),
     )
   )
@@ -71,7 +71,7 @@ object ObjectTypes {
     interfaces = interfaces[Ctx, User](entityInterface),
     () =>
       fields[Ctx, User](
-        Field("id", StringType, resolve = { _.value.id.value }),
+        Field("id", IDType, resolve = { _.value.id.value }),
         Field("createdAt", dateTimeType, resolve = { _.value.createdAt }),
         Field("name", StringType, resolve = { _.value.name.value }),
         Field("status", userStatusType, resolve = { _.value.status }),
@@ -129,6 +129,7 @@ object ObjectTypes {
     interfaces = interfaces[Ctx, Task](entityInterface),
     () =>
       fields[Ctx, Task](
+        Field("id", IDType, resolve = { _.value.id.value }),
         Field("name", StringType, resolve = { _.value.name.value }),
         Field("description", StringType, resolve = { _.value.description.value }),
         Field("status", taskStatusType, resolve = { _.value.status }),
