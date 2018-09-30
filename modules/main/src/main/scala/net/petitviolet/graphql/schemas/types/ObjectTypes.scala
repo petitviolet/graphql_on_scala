@@ -96,23 +96,33 @@ object ObjectTypes {
     UnionType("Plan", types = free :: standard :: enterprise :: Nil)
   }
 
-  implicit lazy val projectType: ObjectType[Ctx, Project] = ObjectType[Ctx, Project](
-    "Project",
-    interfaces = interfaces[Ctx, Project](entityInterface),
-    () =>
-      fields[Ctx, Project](
-        Field("id", StringType, resolve = { _.value.id.value }),
-        Field("createdAt", dateTimeType, resolve = { _.value.createdAt }),
-        Field("name", StringType, resolve = { _.value.name.value }),
-        Field("plan", projectPlanType, resolve = { _.value.plan }),
-        Field("users", ListType(userType), resolve = { ctx =>
-          UserResolver.byProjectId(ctx.value.id)(ctx.ctx)
-        }),
-        Field("tasks", ListType(taskType), resolve = { ctx =>
-          TaskResolver.byProjectId(ctx.value.id)(ctx.ctx)
-        })
+  implicit lazy val projectType: ObjectType[Ctx, Project] = {
+    val usersArgument = Argument("status", OptionInputType(userStatusType))
+    ObjectType[Ctx, Project](
+      "Project",
+      interfaces = interfaces[Ctx, Project](entityInterface),
+      () =>
+        fields[Ctx, Project](
+          Field("id", IDType, resolve = { _.value.id.value }),
+          Field("createdAt", dateTimeType, resolve = { _.value.createdAt }),
+          Field("name", StringType, resolve = { _.value.name.value }),
+          Field("plan", projectPlanType, resolve = { _.value.plan }),
+          Field(
+            "users",
+            ListType(userType),
+            arguments = List(usersArgument),
+            resolve = { ctx =>
+              ctx.withArgs(usersArgument) { statusOpt: Option[UserStatus] =>
+                UserResolver.byProjectId(ctx.value.id, statusOpt)(ctx.ctx)
+              }
+            }
+          ),
+          Field("tasks", ListType(taskType), resolve = { ctx =>
+            TaskResolver.byProjectId(ctx.value.id)(ctx.ctx)
+          })
+      )
     )
-  )
+  }
 
   implicit lazy val taskType: ObjectType[Ctx, Task] = ObjectType.apply[Ctx, Task](
     "Task",
