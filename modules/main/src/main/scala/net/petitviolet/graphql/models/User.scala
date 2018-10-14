@@ -3,7 +3,7 @@ package net.petitviolet.graphql.models
 import java.time.ZonedDateTime
 
 case class User(id: UserId,
-                projectId: ProjectId,
+                projectIds: Seq[ProjectId],
                 name: UserName,
                 status: UserStatus,
                 createdAt: ZonedDateTime)

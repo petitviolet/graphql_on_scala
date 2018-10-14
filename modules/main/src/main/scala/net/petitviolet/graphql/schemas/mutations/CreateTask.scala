@@ -8,13 +8,18 @@ import sangria.macros.derive
 import sangria.schema.{ Argument, Field }
 import spray.json.RootJsonFormat
 
+import scala.concurrent.Future
+
 object CreateTask extends Mutation {
-  case class CreateTaskParam(taskName: String, taskDescription: String, assignedTo: String)
+  case class CreateTaskParam(projectId: String,
+                             taskName: String,
+                             taskDescription: String,
+                             assignedTo: String)
   private lazy val paramType = derive.deriveInputObjectType[CreateTaskParam]()
-  private implicit lazy val paramTypeJ: RootJsonFormat[CreateTaskParam] = jsonFormat3(
+  private implicit lazy val paramTypeJ: RootJsonFormat[CreateTaskParam] = jsonFormat4(
     CreateTaskParam.apply)
 
-  val arg = Argument("attributes", paramType)
+  private val arg = Argument("attributes", paramType)
 
   override def field: Field[Ctx, Unit] = Field(
     "CreateTask",
@@ -22,18 +27,22 @@ object CreateTask extends Mutation {
     arguments = List(arg),
     resolve = { ctx =>
       val user = ctx.ctx.viewer
-      val CreateTaskParam(taskName, taskDescription, assignedTo) = ctx arg arg
-      val task = Task(
-        TaskId.generate,
-        user.projectId,
-        UserId(assignedTo),
-        user.id,
-        TaskName(taskName),
-        TaskDescription(taskDescription),
-        TaskStatus.Todo,
-        ctx.ctx.dateTime
-      )
-      TaskDao.store(task)(ctx.ctx.ec)
+      val CreateTaskParam(projectId, taskName, taskDescription, assignedTo) = ctx arg arg
+      if (user.projectIds contains projectId) {
+        val task = Task(
+          TaskId.generate,
+          ProjectId(projectId),
+          UserId(assignedTo),
+          user.id,
+          TaskName(taskName),
+          TaskDescription(taskDescription),
+          TaskStatus.Todo,
+          ctx.ctx.dateTime
+        )
+        TaskDao.store(task)(ctx.ctx.ec)
+      } else {
+        Future.failed(new RuntimeException(s"cannot create task in project($projectId)"))
+      }
     }
   )
 

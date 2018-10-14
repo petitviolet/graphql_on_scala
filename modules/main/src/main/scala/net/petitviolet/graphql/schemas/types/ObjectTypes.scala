@@ -75,29 +75,30 @@ object ObjectTypes {
         Field("createdAt", dateTimeType, resolve = { _.value.createdAt }),
         Field("name", StringType, resolve = { _.value.name.value }),
         Field("status", userStatusType, resolve = { _.value.status }),
-        Field("projectId", StringType, resolve = { _.value.projectId.value }),
         Field("assignedTasks", ListType(taskType), resolve = { ctx =>
           TaskResolver.byAssignedTo(ctx.value.id)(ctx.ctx)
         }),
         Field("createdTasks", ListType(taskType), resolve = { ctx =>
           TaskResolver.byCreatedBy(ctx.value.id)(ctx.ctx)
         }),
-        Field("project", projectType, resolve = { ctx =>
-          ProjectResolver.byId(ctx.value.projectId)(ctx.ctx)
+        Field("projectIds", ListType(StringType), resolve = { _.value.projectIds.map { _.value } }),
+        Field("projects", ListType(projectType), resolve = { ctx =>
+          ProjectResolver.byIds(ctx.value.projectIds)(ctx.ctx)
         })
     )
   )
 
-  private implicit lazy val projectPlanType = {
-    val free = derive.deriveObjectType[Ctx, Plan.Free]()
-    val standard = derive.deriveObjectType[Ctx, Plan.Standard]()
-    val enterprise = derive.deriveObjectType[Ctx, Plan.Enterprise]()
-
-    UnionType("Plan", types = free :: standard :: enterprise :: Nil)
-  }
-
   implicit lazy val projectType: ObjectType[Ctx, Project] = {
     val usersArgument = Argument("status", OptionInputType(userStatusType))
+
+    implicit val projectPlanType: UnionType[Ctx] = {
+      val free = derive.deriveObjectType[Ctx, Plan.Free]()
+      val standard = derive.deriveObjectType[Ctx, Plan.Standard]()
+      val enterprise = derive.deriveObjectType[Ctx, Plan.Enterprise]()
+
+      UnionType("Plan", types = free :: standard :: enterprise :: Nil)
+    }
+
     ObjectType[Ctx, Project](
       "Project",
       interfaces = interfaces[Ctx, Project](entityInterface),

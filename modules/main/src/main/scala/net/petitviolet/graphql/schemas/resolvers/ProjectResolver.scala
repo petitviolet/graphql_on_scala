@@ -11,8 +11,11 @@ object ProjectResolver {
     ProjectDao.findAll()
   }
 
-  def byId(taskId: ProjectId)(implicit ctx: GraphQLContext): Future[Project] = {
-    ProjectDao.findById(taskId).forceGetOr(s"task(${taskId.value}) not found.")
+  def byId(projectId: ProjectId)(implicit ctx: GraphQLContext): Future[Project] = {
+    ProjectDao.findById(projectId).forceGetOr(s"project(${projectId.value}) not found.")
   }
 
+  def byIds(projectIds: Seq[ProjectId])(implicit ctx: GraphQLContext): Future[Seq[Project]] = {
+    ProjectDao.findByIds(projectIds)
+  }
 }

@@ -11,21 +11,21 @@ object UserDao extends Dao[User] {
     this.data ++= List(
       User(
         UserId("u1"),
-        ProjectId("p1"),
+        ProjectId("p1") :: Nil,
         UserName("alice"),
         UserStatus.Active,
         ZonedDateTime.now()
       ),
       User(
         UserId("u2"),
-        ProjectId("p1"),
+        ProjectId("p1") :: Nil,
         UserName("bob"),
         UserStatus.Active,
         ZonedDateTime.now()
       ),
       User(
         UserId("u3"),
-        ProjectId("p2"),
+        ProjectId("p2") :: Nil,
         UserName("charlie"),
         UserStatus.Paused,
         ZonedDateTime.now()
@@ -40,6 +40,6 @@ object UserDao extends Dao[User] {
   }
 
   def findByProjectId(projectId: ProjectId)(implicit ec: ExecutionContext): Future[Seq[User]] = {
-    filterBy { case (_, user) => user.projectId == projectId }
+    filterBy { case (_, user) => user.projectIds contains projectId }
   }
 }
