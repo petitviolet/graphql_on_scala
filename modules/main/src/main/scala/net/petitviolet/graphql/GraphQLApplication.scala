@@ -21,6 +21,7 @@ import sangria.marshalling.ResultMarshaller
 import sangria.marshalling.sprayJson._
 import sangria.parser.{ QueryParser, SyntaxError }
 import sangria.schema.Schema
+import sangria.slowlog.SlowLog
 import sangria.validation.Violation
 import spray.json.{ JsObject, JsString, JsValue }
 
@@ -34,15 +35,20 @@ object GraphQLServer extends WithLogger {
 
   private lazy val schema: Schema[Ctx, Unit] = schemas.schema
 
+  private lazy val middlewares: List[Middleware[Ctx]] = {
+    val slowLog = SlowLog(logger, threshold = 10.millis)
+
+    slowLog :: Nil
+  }
+
   def showSchema: String = {
     schema.renderPretty
   }
 
-  private val executionContext =
+  private implicit val executionContext: ExecutionContextExecutorService =
     ExecutionContext.fromExecutorService(Executors.newFixedThreadPool(16))
 
-  def execute(userIdOpt: Option[String], jsValue: JsValue)(
-      implicit ec: ExecutionContext): Future[(StatusCode, JsValue)] = {
+  def execute(userIdOpt: Option[String], jsValue: JsValue): Future[(StatusCode, JsValue)] = {
     val JsObject(fields) = jsValue
     val operation = fields.get("operationName") collect {
       case JsString(op) => op
@@ -55,23 +61,27 @@ object GraphQLServer extends WithLogger {
 
     val Some(JsString(document)) = fields.get("query")
 
-    Future.fromTry(QueryParser.parse(document)) zip (GraphQLContext.create(userIdOpt)) flatMap {
+    Future.fromTry(QueryParser.parse(document)) zip GraphQLContext.create(userIdOpt) flatMap {
       case (queryDocument: Document, context: GraphQLContext) =>
-        Executor
-          .execute(
+        val result: Future[JsValue] =
+          Executor.execute[Ctx, Unit, JsObject](
             schema,
             queryDocument,
             context,
             exceptionHandler = exceptionHandler,
             operationName = operation,
-            variables = vars
+            variables = vars,
+            middleware = middlewares
           )
+        result
           .map { jsValue =>
             OK -> jsValue
           }
           .recover {
-            case error: QueryAnalysisError => BadRequest -> error.resolveError
-            case error: ErrorWithResolver  => InternalServerError -> error.resolveError
+            case error: QueryAnalysisError =>
+              BadRequest -> error.resolveError
+            case error: ErrorWithResolver =>
+              InternalServerError -> error.resolveError
           }
     } recover {
       case v: SyntaxError =>

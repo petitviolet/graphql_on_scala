@@ -14,7 +14,8 @@ val commonDependencies = {
   val AKKA_HTTP = "10.1.5"
   Seq(
     "net.petitviolet" %% "operator" % "0.4.0",
-    "org.sangria-graphql" %% "sangria" % "1.4.1",
+    "org.sangria-graphql" %% "sangria" % "1.4.2",
+    "org.sangria-graphql" %% "sangria-slowlog" % "0.1.8",
     "org.sangria-graphql" %% "sangria-spray-json" % "1.0.1",
 //  "org.sangria-graphql" %% "sangria-circe" % "1.1.1",
     "com.typesafe.akka" %% "akka-http" % AKKA_HTTP,
