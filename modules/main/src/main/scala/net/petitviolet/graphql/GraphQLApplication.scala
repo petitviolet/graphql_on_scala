@@ -14,8 +14,7 @@ import akka.stream.ActorMaterializer
 import net.petitviolet.graphql.commons.WithLogger
 import net.petitviolet.graphql.commons.exceptions.{ AuthenticationError, NotFoundException }
 import net.petitviolet.graphql.models.daos
-import net.petitviolet.graphql.schemas.Middlewares.AuthenticationFilter
-import net.petitviolet.graphql.schemas.resolvers.UserResolver
+import net.petitviolet.graphql.schemas.resolvers.{ ProjectResolver, TaskResolver, UserResolver }
 import net.petitviolet.graphql.schemas.{ GraphQLContext, Middlewares }
 import sangria.ast.Document
 import sangria.execution.deferred.DeferredResolver
@@ -24,7 +23,6 @@ import sangria.marshalling.ResultMarshaller
 import sangria.marshalling.sprayJson._
 import sangria.parser.{ QueryParser, SyntaxError }
 import sangria.schema.Schema
-import sangria.slowlog.SlowLog
 import sangria.validation.Violation
 import spray.json.{ JsObject, JsString, JsValue }
 
@@ -46,7 +44,11 @@ object GraphQLServer extends WithLogger {
     ExecutionContext.fromExecutorService(Executors.newFixedThreadPool(16))
 
   private lazy val deferredResolver = DeferredResolver.fetchers(
-    UserResolver.byProjectFetcher,
+    UserResolver.userFetcher,
+    TaskResolver.taskFetcher,
+    TaskResolver.taskFetcherForProject,
+    TaskResolver.taskFetcherForAssignedTo,
+    TaskResolver.taskFetcherForCreatedBy,
   )
 
   def execute(userIdOpt: Option[String], jsValue: JsValue): Future[(StatusCode, JsValue)] = {

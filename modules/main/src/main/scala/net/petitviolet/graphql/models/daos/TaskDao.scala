@@ -64,6 +64,14 @@ object TaskDao extends Dao[Task] {
     }
   }
 
+  def findByProjectIds(projectIds: Seq[ProjectId])(
+      implicit ec: ExecutionContext): Future[Seq[Task]] = {
+    logger.debug(s"[$tag]findByProjectIds($projectIds)")
+    filterBy {
+      case (_, task) => projectIds contains task.projectId
+    }
+  }
+
   def findByProjectId(projectId: ProjectId)(implicit ec: ExecutionContext): Future[Seq[Task]] = {
     logger.debug(s"[$tag]findByProjectId($projectId)")
     filterBy {
@@ -71,10 +79,23 @@ object TaskDao extends Dao[Task] {
     }
   }
 
+  def findByAssignedTos(userIds: Seq[UserId])(implicit ec: ExecutionContext): Future[Seq[Task]] = {
+    logger.debug(s"[$tag]findByAssignedTos($userIds)")
+    filterBy {
+      case (_, task) => userIds contains task.assignedTo
+    }
+  }
   def findByAssignedTo(userId: UserId)(implicit ec: ExecutionContext): Future[Seq[Task]] = {
     logger.debug(s"[$tag]findByAssignedTo($userId)")
     filterBy {
       case (_, task) => task.assignedTo == userId
+    }
+  }
+
+  def findByCreatedBys(userIds: Seq[UserId])(implicit ec: ExecutionContext): Future[Seq[Task]] = {
+    logger.debug(s"[$tag]findByCreatedBys($userIds)")
+    filterBy {
+      case (_, task) => userIds contains task.createdBy
     }
   }
 
