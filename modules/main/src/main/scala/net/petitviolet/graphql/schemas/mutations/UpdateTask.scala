@@ -16,26 +16,25 @@ object UpdateTask extends Mutation {
                              taskName: Option[String],
                              taskDescription: Option[String],
                              assignedTo: Option[String])
-  private lazy val paramType = derive.deriveInputObjectType[UpdateTaskParam]()
   private implicit lazy val paramTypeJ: RootJsonFormat[UpdateTaskParam] = jsonFormat4(
     UpdateTaskParam.apply)
 
-  val arg = Argument("attributes", paramType)
+  private val arg = Argument("attributes", derive.deriveInputObjectType[UpdateTaskParam]())
 
-  override def field: Field[Ctx, Unit] = Field(
+  def field: Field[Ctx, Unit] = Field(
     "UpdateTask",
     ObjectTypes.taskType,
     arguments = List(arg),
     resolve = { implicit ctx: Context[Ctx, Unit] =>
-      val viewer = ctx.ctx.viewer
+      val viewer = ctx.ctx.loggedInUser
       val UpdateTaskParam(taskId, taskName, taskDescription, assignedTo) = ctx arg arg
       TaskDao.findById(TaskId(taskId)).flatMap {
-        case Some(task) if task.projectId == viewer.projectId =>
+        case Some(task) if viewer.projectIds contains task.projectId =>
           assignedTo.map { id =>
             UserDao.findById(UserId(id)).flatMap {
-              case Some(user) if user.projectId == viewer.projectId =>
+              case Some(user) =>
                 Future.successful(user.id)
-              case _                                                =>
+              case _ =>
                 Future.failed(NotFoundException(s"user($id) not found."))
             }
           } getOrElse { Future.successful(task.assignedTo) } flatMap { userId: UserId =>

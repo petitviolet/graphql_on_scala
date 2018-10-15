@@ -1,5 +1,6 @@
 package net.petitviolet.graphql.schemas
 
+import net.petitviolet.graphql.models.User
 import net.petitviolet.graphql.schemas.resolvers.{ ProjectResolver, TaskResolver, UserResolver }
 import sangria.schema._
 import net.petitviolet.graphql.schemas.types.ObjectTypes._
@@ -21,21 +22,30 @@ object Query {
     val viewerType = ObjectType[Ctx, Unit](
       "ViewerQuery",
       fields[Ctx, Unit](
-        Field("user", userType, resolve = { ctx =>
-          ctx.ctx.viewer
+        Field("self", userType, resolve = { ctx =>
+          ctx.ctx.loggedInUser
         }),
         Field("assignedTasks", ListType(taskType), resolve = { ctx =>
-          TaskResolver.byAssignedTo(ctx.ctx.viewer.id)(ctx.ctx)
+          TaskResolver.byAssignedTo(ctx.ctx.loggedInUser.id)(ctx.ctx)
         }),
         Field("createdTasks", ListType(taskType), resolve = { ctx =>
-          TaskResolver.byCreatedBy(ctx.ctx.viewer.id)(ctx.ctx)
+          TaskResolver.byCreatedBy(ctx.ctx.loggedInUser.id)(ctx.ctx)
         })
       ),
     )
     fields[Ctx, Unit](
-      Field("viewer", viewerType, resolve = { _ =>
+      Field("viewer", viewerType, tags = Middlewares.RequireAuthentication :: Nil, resolve = { _ =>
         ()
       })
     )
   }
+
+  val self: Field[Ctx, User] = Field(
+    "self",
+    userType,
+    tags = Middlewares.RequireAuthentication :: Nil,
+    resolve = { ctx =>
+      ctx.ctx.loggedInUser
+    }
+  )
 }

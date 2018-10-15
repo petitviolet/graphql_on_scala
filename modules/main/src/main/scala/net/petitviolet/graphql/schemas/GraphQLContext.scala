@@ -10,18 +10,22 @@ import scala.concurrent.{ ExecutionContext, Future }
 
 class GraphQLContext private (userOpt: Option[User])(implicit val ec: ExecutionContext) {
   val dateTime: ZonedDateTime = ZonedDateTime.now()
-  def viewer: User = userOpt getOrElse { throw AuthenticationError("must logged-in!") }
+
+  def loggedInUser: User = userOpt getOrElse { throw AuthenticationError("must logged-in!") }
+
+  def isLoggedIn = userOpt.isDefined
 }
 
 object GraphQLContext {
-  private def withoutAuthentication(implicit ec: ExecutionContext) =
+  private def skipAuthentication(implicit ec: ExecutionContext) =
     Future.successful(new GraphQLContext(None))
 
-  def create(userIdOpt: Option[String])(implicit ec: ExecutionContext): Future[GraphQLContext] = {
-    userIdOpt.fold(withoutAuthentication) { userId =>
-      UserDao.authenticate(userId) map { userOpt =>
-        new GraphQLContext(userOpt)
-      }
+  private def authentication(userId: String)(implicit ec: ExecutionContext) =
+    UserDao.authenticate(userId) map { userOpt =>
+      new GraphQLContext(userOpt)
     }
+
+  def create(userIdOpt: Option[String])(implicit ec: ExecutionContext): Future[GraphQLContext] = {
+    userIdOpt map authentication getOrElse skipAuthentication
   }
 }

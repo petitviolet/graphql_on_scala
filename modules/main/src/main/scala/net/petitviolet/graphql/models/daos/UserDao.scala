@@ -35,11 +35,20 @@ object UserDao extends Dao[User] {
     }
   }
 
+  // just a toy authn
   def authenticate(userId: String)(implicit ec: ExecutionContext): Future[Option[User]] = {
+    logger.debug(s"[$tag]authenticate($userId)")
     findBy { case (_, user) => user.id.value == userId }
   }
 
   def findByProjectId(projectId: ProjectId)(implicit ec: ExecutionContext): Future[Seq[User]] = {
+    logger.debug(s"[$tag]findByProjectId($projectId)")
     filterBy { case (_, user) => user.projectIds contains projectId }
+  }
+
+  def findByProjectIds(projectIds: Seq[ProjectId])(
+      implicit ec: ExecutionContext): Future[Seq[User]] = {
+    logger.debug(s"[$tag]findByProjectIds($projectIds)")
+    filterBy { case (_, user) => user.projectIds exists projectIds.contains }
   }
 }

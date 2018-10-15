@@ -14,8 +14,11 @@ import akka.stream.ActorMaterializer
 import net.petitviolet.graphql.commons.WithLogger
 import net.petitviolet.graphql.commons.exceptions.{ AuthenticationError, NotFoundException }
 import net.petitviolet.graphql.models.daos
-import net.petitviolet.graphql.schemas.GraphQLContext
+import net.petitviolet.graphql.schemas.Middlewares.AuthenticationFilter
+import net.petitviolet.graphql.schemas.resolvers.UserResolver
+import net.petitviolet.graphql.schemas.{ GraphQLContext, Middlewares }
 import sangria.ast.Document
+import sangria.execution.deferred.DeferredResolver
 import sangria.execution.{ ExceptionHandler, _ }
 import sangria.marshalling.ResultMarshaller
 import sangria.marshalling.sprayJson._
@@ -35,18 +38,16 @@ object GraphQLServer extends WithLogger {
 
   private lazy val schema: Schema[Ctx, Unit] = schemas.schema
 
-  private lazy val middlewares: List[Middleware[Ctx]] = {
-    val slowLog = SlowLog(logger, threshold = 10.millis)
-
-    slowLog :: Nil
-  }
-
   def showSchema: String = {
     schema.renderPretty
   }
 
   private implicit val executionContext: ExecutionContextExecutorService =
     ExecutionContext.fromExecutorService(Executors.newFixedThreadPool(16))
+
+  private lazy val deferredResolver = DeferredResolver.fetchers(
+    UserResolver.byProjectFetcher,
+  )
 
   def execute(userIdOpt: Option[String], jsValue: JsValue): Future[(StatusCode, JsValue)] = {
     val JsObject(fields) = jsValue
@@ -70,8 +71,9 @@ object GraphQLServer extends WithLogger {
             context,
             exceptionHandler = exceptionHandler,
             operationName = operation,
+            deferredResolver = deferredResolver,
             variables = vars,
-            middleware = middlewares
+            middleware = Middlewares.value
           )
         result
           .map { jsValue =>
@@ -100,21 +102,20 @@ object GraphQLServer extends WithLogger {
   case class InternalError(throwable: Throwable, override val exceptionHandler: ExceptionHandler)
       extends ExecutionError(throwable.getMessage, exceptionHandler)
 
-  sealed abstract class GraphQLErrorType(val value: String)
-  object GraphQLErrorType {
-    case object BadRequest extends GraphQLErrorType("BadRequest")
-    case object InternalServerError extends GraphQLErrorType("InternalServerError")
+  sealed abstract class ErrorType(val value: String)
+  object ErrorType {
+    case object BadRequest extends ErrorType("BadRequest")
+    case object ServerError extends ErrorType("ServerError")
     // auth N/Z
-    case object AuthError extends GraphQLErrorType("AuthError")
+    case object AuthError extends ErrorType("AuthError")
   }
-  implicit val errorType = sangria.macros.derive.deriveEnumType[GraphQLErrorType](
-    sangria.macros.derive.EnumTypeName("ErrorType")
-  )
+  implicit val errorType = sangria.macros.derive.deriveEnumType[ErrorType]()
+
   private val exceptionHandler = {
-    def handleException(m: ResultMarshaller, msg: String, tp: GraphQLErrorType) =
+    def handleException(m: ResultMarshaller, msg: String, tp: ErrorType) =
       HandledException(
         msg,
-        Map("type" -> m.enumNode(tp.value, errorType.name)),
+        additionalFields = Map("type" -> m.enumNode(tp.value, errorType.name)),
         addFieldsInExtensions = false,
         addFieldsInError = true
       )
@@ -122,52 +123,52 @@ object GraphQLServer extends WithLogger {
     val onException: PartialFunction[(ResultMarshaller, Throwable), HandledException] = {
       case (m, qa: QueryAnalysisError) =>
         logger.warn(s"QueryAnalysisError occurred. msg = ${qa.getMessage}")
-        handleException(m, qa.getMessage, GraphQLErrorType.BadRequest)
+        handleException(m, qa.getMessage, ErrorType.BadRequest)
 
       case (m, se: SyntaxError) =>
         logger.info(s"SyntaxError occurred. msg = ${se.getMessage()}")
-        handleException(m, se.getMessage, GraphQLErrorType.BadRequest)
+        handleException(m, se.getMessage, ErrorType.BadRequest)
 
       case (m, ewr: ErrorWithResolver) =>
         logger.error(s"ErrorWithResolver occurred. msg = ${ewr.getMessage}", ewr)
-        handleException(m, ewr.getMessage, GraphQLErrorType.InternalServerError)
+        handleException(m, ewr.getMessage, ErrorType.ServerError)
 
       case (m, AuthenticationError(msg)) =>
         logger.info(s"AuthenticationError occurred. msg = ${msg}")
-        handleException(m, msg, GraphQLErrorType.BadRequest)
+        handleException(m, msg, ErrorType.BadRequest)
 
       case (m, NotFoundException(msg)) =>
         logger.info(s"NotFoundException occurred. msg = ${msg}")
-        handleException(m, msg, GraphQLErrorType.BadRequest)
+        handleException(m, msg, ErrorType.BadRequest)
 
       case (m, t: Throwable) =>
         logger.error(s"unknown server error occurred. msg = ${t.getMessage}", t)
-        handleException(m, t.getMessage, GraphQLErrorType.InternalServerError)
+        handleException(m, t.getMessage, ErrorType.ServerError)
     }
 
     val onViolation: PartialFunction[(ResultMarshaller, Violation), HandledException] = {
       case (m, v) =>
         logger.warn(s"Violation error occurred. msg = ${v.errorMessage}")
-        handleException(m, v.errorMessage, GraphQLErrorType.BadRequest)
+        handleException(m, v.errorMessage, ErrorType.BadRequest)
     }
 
     val onUserFacingError
       : PartialFunction[(ResultMarshaller, UserFacingError), HandledException] = {
       case (m, v: WithViolations) =>
         logger.warn(s"WithViolations occurred. msg = ${v.getMessage()}")
-        handleException(m, v.getMessage, GraphQLErrorType.BadRequest)
+        handleException(m, v.getMessage, ErrorType.BadRequest)
 
       case (m, ie: InternalError) =>
         logger.error(s"InternalError occurred. msg = ${ie.getMessage()}", ie)
-        handleException(m, ie.getMessage, GraphQLErrorType.InternalServerError)
+        handleException(m, ie.getMessage, ErrorType.ServerError)
 
       case (m, ee: ExecutionError) =>
         logger.error(s"ExecutionError occurred. msg = ${ee.getMessage()}", ee)
-        handleException(m, ee.getMessage, GraphQLErrorType.InternalServerError)
+        handleException(m, ee.getMessage, ErrorType.ServerError)
 
       case (m, ufe) =>
         logger.warn(s"UserFacingError occurred. msg = ${ufe.getMessage()}")
-        handleException(m, ufe.getMessage, GraphQLErrorType.BadRequest)
+        handleException(m, ufe.getMessage, ErrorType.BadRequest)
     }
 
     ExceptionHandler(onException, onViolation, onUserFacingError)

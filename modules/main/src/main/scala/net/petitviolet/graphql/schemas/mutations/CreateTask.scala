@@ -26,7 +26,7 @@ object CreateTask extends Mutation {
     ObjectTypes.taskType,
     arguments = List(arg),
     resolve = { ctx =>
-      val user = ctx.ctx.viewer
+      val user = ctx.ctx.loggedInUser
       val CreateTaskParam(projectId, taskName, taskDescription, assignedTo) = ctx arg arg
       if (user.projectIds contains projectId) {
         val task = Task(

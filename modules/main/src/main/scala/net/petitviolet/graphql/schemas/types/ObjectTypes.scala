@@ -12,6 +12,24 @@ import sangria.schema._
 import scala.util.Try
 
 object ObjectTypes {
+  case class Episode()
+//  private implicit val episodeType: ObjectType[Unit, Episode] = ???
+//
+//  case class Character(name: String, appearsIn: Seq[Option[Episode]])
+//
+//  val characterType: ObjectType[Unit, Character] = ObjectType(
+//    "Character",
+//    fields[Unit, Character](
+//      Field("name", StringType, resolve = { ctx: Context[Unit, Character] =>
+//        ctx.value.name
+//      }),
+//      Field("appearsIn", ListType(OptionType(episodeType)), resolve = {
+//        ctx: Context[Unit, Character] =>
+//          ctx.value.appearsIn
+//      })
+//    )
+//  )
+
   private implicit val dateTimeType: ScalarType[ZonedDateTime] = {
     import sangria.validation._
     case object ZonedDateTimeCoercionViolation extends ValueCoercionViolation("DateTime expected")
@@ -49,22 +67,8 @@ object ObjectTypes {
     )
   )
 
-//  implicit lazy val userType = derive.deriveObjectType[Ctx, User](
-//    derive.Interfaces(entityInterface),
-//    derive.AddFields(
-//      Field("assignedTasks", ListType(taskType), resolve = { ctx =>
-//        TaskResolver.byAssignedTo(ctx.value.id)(ctx.ctx)
-//      }),
-//      Field("createdTasks", ListType(taskType), resolve = { ctx =>
-//        TaskResolver.byCreatedBy(ctx.value.id)(ctx.ctx)
-//      }),
-//      Field("project", projectType, resolve = { ctx =>
-//        ProjectResolver.byId(ctx.value.projectId)(ctx.ctx)
-//      })
-//    )
-//  )
-
-  implicit lazy val userStatusType = derive.deriveEnumType[UserStatus]()
+  val userStatusType: EnumType[UserStatus] =
+    derive.deriveEnumType[UserStatus]()
 
   implicit lazy val userType: ObjectType[Ctx, User] = ObjectType[Ctx, User](
     "User",
