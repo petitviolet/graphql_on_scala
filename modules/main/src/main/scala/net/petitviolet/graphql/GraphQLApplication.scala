@@ -45,6 +45,7 @@ object GraphQLServer extends WithLogger {
 
   private lazy val deferredResolver = DeferredResolver.fetchers(
     UserResolver.userFetcher,
+    UserResolver.userFetcherByProject,
     TaskResolver.taskFetcher,
     TaskResolver.taskFetcherForProject,
     TaskResolver.taskFetcherForAssignedTo,
