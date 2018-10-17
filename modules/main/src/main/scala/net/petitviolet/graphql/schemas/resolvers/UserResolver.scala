@@ -33,7 +33,8 @@ object UserResolver {
     UserDao.findAll()
   }
 
-  def byId(userId: UserId)(implicit ctx: GraphQLContext): DeferredValue[GraphQLContext, User] = {
+  def byId(userId: UserId)(
+    implicit ctx: GraphQLContext): DeferredValue[GraphQLContext, User] = {
     DeferredValue(userFetcher.defer(userId))
   }
 
