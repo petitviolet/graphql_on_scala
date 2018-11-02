@@ -34,7 +34,7 @@ import scala.util.control.NonFatal
 object GraphQLServer extends WithLogger {
   type Ctx = GraphQLContext
 
-  private lazy val schema: Schema[Ctx, Unit] = schemas.schema
+  private val schema: Schema[Ctx, Unit] = schemas.schema
 
   def showSchema: String = {
     schema.renderPretty
@@ -69,9 +69,9 @@ object GraphQLServer extends WithLogger {
       case (queryDocument: Document, context: GraphQLContext) =>
         val result: Future[JsValue] =
           Executor.execute[Ctx, Unit, JsObject](
-            schema,
-            queryDocument,
-            context,
+            schema: Schema[Ctx, Unit],
+            queryDocument: Document,
+            context: Ctx,
             exceptionHandler = exceptionHandler,
             operationName = operation,
             deferredResolver = deferredResolver,
