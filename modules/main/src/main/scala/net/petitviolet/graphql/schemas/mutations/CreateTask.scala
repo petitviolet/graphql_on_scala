@@ -15,7 +15,7 @@ object CreateTask extends Mutation {
                              taskName: String,
                              taskDescription: String,
                              assignedTo: String)
-  private lazy val paramType = derive.deriveInputObjectType[CreateTaskParam]()
+  private val paramType = derive.deriveInputObjectType[CreateTaskParam]()
   private implicit lazy val paramTypeJ: RootJsonFormat[CreateTaskParam] = jsonFormat4(
     CreateTaskParam.apply)
 

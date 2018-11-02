@@ -16,10 +16,9 @@ object UpdateTask extends Mutation {
                              taskName: Option[String],
                              taskDescription: Option[String],
                              assignedTo: Option[String])
-  private implicit lazy val paramTypeJ: RootJsonFormat[UpdateTaskParam] = jsonFormat4(
-    UpdateTaskParam.apply)
-
-  private val arg = Argument("attributes", derive.deriveInputObjectType[UpdateTaskParam]())
+  private implicit val paramJson = jsonFormat4(UpdateTaskParam.apply)
+  private val param = derive.deriveInputObjectType[UpdateTaskParam]()
+  private val arg = Argument("attributes", param)
 
   def field: Field[Ctx, Unit] = Field(
     "UpdateTask",
