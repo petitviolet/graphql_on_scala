@@ -13,6 +13,6 @@ sealed trait Plan
 
 object Plan {
   case class Free(startDate: ZonedDateTime) extends Plan
-  case class Standard(contractDate: ZonedDateTime)
+  case class Standard(contractDate: ZonedDateTime) extends Plan
   case class Enterprise(userLimit: Int, contractDate: ZonedDateTime) extends Plan
 }
