@@ -77,7 +77,9 @@ object ObjectTypes {
       fields[Ctx, User](
         Field("id", IDType, resolve = { _.value.id.value }),
         Field("createdAt", dateTimeType, resolve = { _.value.createdAt }),
-        Field("name", StringType, resolve = { _.value.name.value }),
+        Field("name", StringType, resolve = { ctx: Context[Ctx, User] =>
+          ctx.value.name.value
+        }),
         Field("status", userStatusType, resolve = { _.value.status }),
         Field("assignedTasks", ListType(taskType), resolve = { ctx =>
           TaskResolver.byAssignedTo(ctx.value.id)(ctx.ctx)

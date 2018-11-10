@@ -1,7 +1,7 @@
 package net.petitviolet.graphql.schemas.resolvers
 
 import net.petitviolet.graphql.models.daos.ProjectDao
-import net.petitviolet.graphql.models.{ Project, ProjectId, TaskId, UserId }
+import net.petitviolet.graphql.models._
 import net.petitviolet.graphql.schemas.GraphQLContext
 
 import scala.concurrent.Future

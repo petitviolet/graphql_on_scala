@@ -6,9 +6,12 @@ import net.petitviolet.graphql.schemas.GraphQLContext
 import sangria.execution.deferred._
 import sangria.schema.DeferredValue
 
-import scala.concurrent.Future
+import scala.collection.mutable
+import scala.concurrent.{ ExecutionContext, Future }
 
 object UserResolver {
+  private val cache = new mutable.HashMap[String, Seq[User]]()
+
   private val usersByProjects: Relation[User, User, ProjectId] =
     Relation[User, ProjectId]("byProjects", { u: User =>
       u.projectIds
@@ -17,7 +20,7 @@ object UserResolver {
   private implicit lazy val hasId: HasId[User, UserId] = HasId(_.id)
 
   lazy val userFetcher: Fetcher[GraphQLContext, User, User, UserId] = {
-    Fetcher.caching { (ctx: GraphQLContext, ids: Seq[UserId]) =>
+    Fetcher.apply { (ctx: GraphQLContext, ids: Seq[UserId]) =>
       UserDao.findByIds(ids)(ctx.ec)
     }
   }
@@ -30,7 +33,17 @@ object UserResolver {
   }
 
   def all()(implicit ctx: GraphQLContext): Future[Seq[User]] = {
-    UserDao.findAll()
+    withCache("user#all") {
+      UserDao.findAll()
+    }
+  }
+
+  private def withCache(key: String)(f: => Future[Seq[User]])(implicit ec: ExecutionContext): Future[Seq[User]] = {
+    cache.get(key) map { Future.successful } getOrElse {
+      val result = f
+      result foreach { res => cache.update(key, res) }
+      result
+    }
   }
 
   def byId(userId: UserId)(implicit ctx: GraphQLContext): DeferredValue[GraphQLContext, User] = {
